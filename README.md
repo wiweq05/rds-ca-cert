@@ -7,8 +7,8 @@ Automate updating RDS CA Certificate
 [ec2-user@ip-pgrpt]$ ./ pg_health_check.sh
 5. Running this file creates below three files:
 - instance-list.txt : This is the list of ALL RDS instances in the account and regions associated with CLI configuration.
-- after-update-txt : This is the list of RDS CA Cert name ("rds-ca-2019") for each instance
-- 
+- after-update-txt : This is the list of updated RDS CA Cert name ("rds-ca-2019") for each instance
+- final-rds-cert.txt :  List of RDS instances with updated Cert name
 
 **Please Note**
 1. Updating RDS CA Cert reboots the instance. For quick reboot stop all connections to the database instance.
