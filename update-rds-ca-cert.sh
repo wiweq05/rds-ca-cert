@@ -12,7 +12,7 @@ echo "$REGION" > region.txt
 echo -e "Checking RDS instances NOT configured with rds-ca-2019 cert in $REGION region."
 while read p; do aws rds describe-db-instances --query 'DBInstances[?CACertificateIdentifier != `rds-ca-2019`].DBInstanceIdentifier' --output text --region $p; done <region.txt | xargs -n 1 > instance_list.txt
 sed -i '/^$/d' instance_list.txt
-echo -e "instance_list files is created. Total `< instance_list.txt wc -l` instances need to be updated."
+echo -e "instance_list file is created. Total `< instance_list.txt wc -l` instances need to be updated."
 
 #Step 2: Update CA Cert
 if [[ $(wc -l <"instance_list.txt") -eq 0 ]];then
