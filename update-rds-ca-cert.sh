@@ -22,8 +22,8 @@ exit 1
 else
 echo "Now updaing `< instance_list.txt wc -l` RDS instances with rds-ca-2019 cert."
         while read p;
-        do aws rds modify-db-instance --db-instance-identifier "$p" --ca-certificate-identifier rds-ca-2019 --apply-immediately ;
+        do aws rds modify-db-instance --db-instance-identifier "$p" --region $REGION  --ca-certificate-identifier rds-ca-2019 --apply-immediately ;
         echo "RDS instance "$p" updated";
         done <instance_list.txt >update-cert.log
-        echo -e "CA Cert update is completed. Total `grep -r "RDS instance" update-cert.log | wc -l` instances are updated."
+        echo -e "CA Cert update is completed. Total `grep -r "RDS instance" update-cert.log | wc -l` instances updated."
 fi
