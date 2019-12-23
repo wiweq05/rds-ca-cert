@@ -4,43 +4,20 @@
 #V-1 : 12/13/2019
 #################
 clear
+#Step 1: List all AWS Regions
+aws ec2 describe-regions | grep  "RegionName" | sed -e 's/"RegionName": "//g'| sed -e 's/"//g' > region.txt
+echo -e "Region.txt file is created. Now checking RDS instances with NOT rds-ca-2019 cert in these regions."
 
-#creating list of all RDS instances in AWS account and region associated with AWS CLI.
-#If you don't want to update ALL instances associated. Remove below describe-db-instances and list your instances in "instance-list.txt.
+#Step 2: List of ALL RDS instances with  CA Cert not as rds-ca-2019
+while read p; 
+do aws rds describe-db-instances --query 'DBInstances[?CACertificateIdentifier != `rds-ca-2019`].DBInstanceIdentifier' --output text --region $p; 
+done <region.txt | xargs -n 1 > instance_list.txt
+echo -e "instance_list files is created. Total `< instance_list.txt wc -l` instances need to be updated. Now updating these RDS instances with rds-ca-2019 cert."
 
-aws rds describe-db-instances |grep \"DBInstanceIdentifier\"|awk '{print $2}'|sed -e 's/"//g' > instance-list.txt
-echo "instance-list.txt file is created. Getting current RDS cert details now."
-
-#Getting list of current RDS Cert name ("rds-ca-2019") for each instance
-while read p;
-do aws rds describe-db-instances --db-instance-identifier "$p";
-sleep 5; 
-done <instance-list.txt | grep "CACertificateIdentifier"|awk '{print $2}'|sed -e 's/"//g'|sed -e 's/,//g' > before-update.txt
-
-paste  instance-list.txt before-update.txt > before-rds-cert.txt
-
-echo "before-rds-cert.txt file is created. Update starting in 10 sec ..."
-sleep 10
-echo "Update started. It may take a while depending on number of instances."
-
-#updating each instance in above list to update RDS Cert with "rds-ca-2019"
+#Step 3: Update CA Cert to rds-ca-2019
 while read p;
 do aws rds modify-db-instance --db-instance-identifier "$p" --ca-certificate-identifier rds-ca-2019 --apply-immediately ;
-echo "RDS instance "$p" updated"
-sleep 5;
-done <instance-list.txt >update-cert.log
+echo "RDS instance "$p" updated";
+done <instance_list.txt >update-cert.log
+echo -e "CA Cert update is completed."
 
-sleep 60
-
-#Getting list of updated RDS Cert name ("rds-ca-2019") for each instance
-while read p;
-do aws rds describe-db-instances --db-instance-identifier "$p";
-sleep 5;
-done <instance-list.txt | grep "CACertificateIdentifier"|awk '{print $2}'|sed -e 's/"//g'|sed -e 's/,//g' >after-update.txt
-
-#creating a file with instance name and associated RDS Cert name
-paste  instance-list.txt after-update.txt > final-rds-cert.txt
-rm before-update.txt
-rm after-update.txt
-
-echo "Upgrade completed. final-rds-cert.txt file created."
